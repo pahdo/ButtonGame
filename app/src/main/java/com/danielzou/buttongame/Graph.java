@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * This class represents a graph of nodes and edges, intended to abstract magic buttons and their
+ * This class represents a directed graph of nodes and edges, intended to abstract magic buttons and their
  * links or associations.
  */
 
@@ -19,46 +19,45 @@ public class Graph {
         mNodes = new HashSet<>();
         for (int i = 0; i < numNodes; i++) {
             Node node = new Node(i);
+            mNodes.add(node);
         }
+        mEdges = new HashSet<>();
         makeEdges(nodeDegree);
     }
 
     /**
-     * Draws edges between a set of n node, where each node has maxDegree edges.
+     * Draws arrows between a set of n nodes, where each node has maxDegree edges.
+     * Warning: if you attempt to generate a graph that cannot possibly be generated, this
+     * method will recursively call itself infinitely many times.
      * @param maxDegree The desired degree of each node.
      */
     public void makeEdges(int maxDegree) {
 
-        Set<Node> openSet = mNodes;
+        Set<Node> openSet = new HashSet<>();
+        openSet.addAll(mNodes);
         Set<Edge> tempEdges = new HashSet<>();
 
-        for (Node node : openSet) {
+        for (Node node : mNodes) {
             openSet.remove(node);
-            while(getDegree(tempEdges, node) < maxDegree) {
+            while(getOutdegree(tempEdges, node) < maxDegree) {
                 Node other = chooseRandomNodeFromSet(openSet);
-                if (getDegree(tempEdges, other) >= maxDegree) {
-                    openSet.remove(other);
-                } else if (openSet.size() == 1 && sharesEdgeWith(tempEdges, node, other)) {
-                    // The graph generated so far means a button has to be linked with another
-                    // button twice, so we will try generating the graph again from the beginning.
-                    makeEdges(maxDegree);
-                    return;
-                } else {
-                    linkNodes(tempEdges, node, other);
-                }
+                linkNodes(tempEdges, node, other);
             }
+            openSet.add(node);
         }
+
+        mEdges.addAll(tempEdges);
 
     }
 
-    public int getDegree(Set<Edge> associations, Node node) {
-        int edges = 0;
-        for (Edge edge : associations) {
-            if (edge.hasNode(node)) {
-                edges ++;
+    public int getOutdegree(Set<Edge> edges, Node node) {
+        int numEdges = 0;
+        for (Edge edge : edges) {
+            if (edge.getNode1().equals(node)) {
+                numEdges ++;
             }
         }
-        return edges;
+        return numEdges;
     }
 
     /**
@@ -80,22 +79,6 @@ public class Graph {
     }
 
     /**
-     * A helper function for makeEdges which returns whether there exists an Edge between
-     * the two passed-in buttons.
-     * @param b1 Node 1.
-     * @param b2 Node 2.
-     * @return Whether there is an Edge between button 1 and button 2.
-     */
-    private boolean sharesEdgeWith(Set<Edge> edges, Node b1, Node b2) {
-        for (Edge edge : edges) {
-            if (edge.hasNode(b1) && edge.hasNode(b2)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Helper function for makeEdges, which performs the work of adding an edge to
      * the edges set.
      * @param b1 Node 1.
@@ -106,4 +89,11 @@ public class Graph {
         edges.add(link);
     }
 
+    public Set<Node> getNodes() {
+        return mNodes;
+    }
+
+    public Set<Edge> getEdges() {
+        return mEdges;
+    }
 }

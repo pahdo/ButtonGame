@@ -6,21 +6,20 @@ package com.danielzou.buttongame;
 
 public class Edge {
 
-    private Node b1;
-    private Node b2;
+    private Node n1;
+    private Node n2;
 
-    public Edge(Node b1, Node b2) {
-        this.b1 = b1;
-        this.b2 = b2;
+    public Edge(Node n1, Node n2) {
+        this.n1 = n1;
+        this.n2 = n2;
     }
 
-    /**
-     * Returns whether this association contains the inputted node.
-     * @param node Node in question.
-     * @return Whether this association contains the node.
-     */
-    public boolean hasNode(Node node) {
-        return node.equals(b1) || node.equals (b2);
+    public Node getNode1() {
+        return n1;
+    }
+
+    public Node getNode2() {
+        return n2;
     }
 
 }

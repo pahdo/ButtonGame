@@ -12,6 +12,9 @@ import java.util.Set;
 
 public class MagicButton {
 
+    //TODO make buttons on by default
+    //TODO dynamically add buttons
+
     private SwitchCompat switchCompat;
     private Node node;
     // Same id as node.

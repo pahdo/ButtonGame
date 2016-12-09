@@ -1,21 +1,19 @@
 package com.danielzou.buttongame;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CompoundButton;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.GridLayout;
-import android.widget.LinearLayout;
-import android.widget.Switch;
+import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,6 +21,7 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     Set<MagicButton> mMagicButtons;
+    Graph mGraph;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,47 +29,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        mMagicButtons = new HashSet<>();
 
-        GridLayout gl = (GridLayout) findViewById(R.id.grid_layout);
-        SwitchCompat mySwitchCompat = new SwitchCompat(this);
-        mySwitchCompat.setId(View.generateViewId());
-        mySwitchCompat.setWidth(dpsToPixels(47));
-        mySwitchCompat.setHeight(dpsToPixels(47));
-        Drawable bg = getDrawable(R.drawable.magic_toggle_button);
-        mySwitchCompat.setBackground(bg);
-        mySwitchCompat.setElevation(dpsToPixels(2));
-        GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
-        lp.setGravity(Gravity.CENTER);
+        // Game defaults to 4 nodes each of degree 1
+        if (getIntent().getExtras() == null) {
+            getIntent().putExtra("numNodes", 4);
+            getIntent().putExtra("degreeNum", 1);
+        }
 
-        lp.setMargins(dpsToPixels(8), dpsToPixels(8), dpsToPixels(8), dpsToPixels(8));
-        gl.addView(mySwitchCompat, lp);
+        makeGame(getIntent().getIntExtra("numNodes", 4), getIntent().getIntExtra("degreeNum", 1));
 
-        final SwitchCompat sc1 = (SwitchCompat) findViewById(R.id.button1);
-        final SwitchCompat sc2 = (SwitchCompat) findViewById(R.id.button2);
-        final SwitchCompat sc3 = (SwitchCompat) findViewById(R.id.button3);
-        final SwitchCompat sc4 = (SwitchCompat) findViewById(R.id.button4);
-
-        Graph graph = new Graph(4, 1);
-        Set<Node> nodesSet = graph.getNodes();
-        Node[] nodesArray = nodesSet.toArray(new Node[nodesSet.size()]);
-        final MagicButton mb1 = new MagicButton(sc1, nodesArray[0]);
-        final MagicButton mb2 = new MagicButton(sc2, nodesArray[1]);
-        final MagicButton mb3 = new MagicButton(sc3, nodesArray[2]);
-        final MagicButton mb4 = new MagicButton(sc4, nodesArray[3]);
-        mMagicButtons = new HashSet<MagicButton>();
-        mMagicButtons.add(mb1);
-        mMagicButtons.add(mb2);
-        mMagicButtons.add(mb3);
-        mMagicButtons.add(mb4);
-
-        Set<Edge> edges = graph.getEdges();
+        Set<Edge> edges = mGraph.getEdges();
         for (Edge edge : edges) {
             MagicButton mb = findMagicButtonById(edge.getNode1().getId());
-            //SwitchCompat sc = mb.getSwitchCompat();
             MagicButton otherMb = findMagicButtonById(edge.getNode2().getId());
             SwitchCompat otherSc = otherMb.getSwitchCompat();
             mb.appendToSwitchCompatLinks(otherSc);
-            //otherMb.appendToSwitchCompatLinks(sc);
         }
 
         for (final MagicButton magicButton : mMagicButtons) {
@@ -80,12 +54,26 @@ public class MainActivity extends AppCompatActivity {
                     for (SwitchCompat switchCompat : magicButton.getSwitchCompatLinks()) {
                         switchCompat.toggle();
                     }
+                    if (isGameFinished()) {
+                        TextView textView = (TextView) findViewById(R.id.text_view);
+                        textView.setText("Congratulations - you win!");
+                        for (MagicButton mb : mMagicButtons) {
+                            final Animation myAnim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.bounce);
+                            mb.getSwitchCompat().startAnimation(myAnim);
+                            mb.getSwitchCompat().setEnabled(false);
+                        }
+                    }
                 }
             });
         }
 
     }
 
+    /**
+     * Finds a magic button in the set of magic buttons by id.
+     * @param id Given id.
+     * @return Corresponding magic button.
+     */
     public MagicButton findMagicButtonById(int id) {
         for (MagicButton mb : mMagicButtons) {
             if (mb.getId() == id) {
@@ -104,6 +92,59 @@ public class MainActivity extends AppCompatActivity {
         return (int) (dps * scale + 0.5f);
     }
 
+    /**
+     * Adds a new switch compat to the grid layout.
+     * @return The generated switch compat.
+     */
+    public SwitchCompat generateSwitchCompat() {
+        GridLayout gl = (GridLayout) findViewById(R.id.grid_layout);
+        SwitchCompat mySwitchCompat = new SwitchCompat(this);
+        mySwitchCompat.setId(View.generateViewId());
+        Drawable bg = getDrawable(R.drawable.magic_toggle_button);
+        mySwitchCompat.setBackground(bg);
+        mySwitchCompat.setElevation(dpsToPixels(2));
+        mySwitchCompat.setChecked(true);
+        Drawable thumb = getDrawable(R.drawable.invisible);
+        mySwitchCompat.setThumbDrawable(thumb);
+        Drawable track = getDrawable(R.drawable.invisible);
+        mySwitchCompat.setTrackDrawable(track);
+        GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
+        lp.setGravity(Gravity.CENTER);
+        lp.setMargins(dpsToPixels(8), dpsToPixels(8), dpsToPixels(8), dpsToPixels(8));
+        gl.addView(mySwitchCompat, lp);
+        return mySwitchCompat;
+    }
+
+    /**
+     * Sets up the button game with a given number of nodes and arrows per node.
+     * @param numButtons Given number of buttons in the game.
+     * @param degree Desired number of one-way associations per button.
+     */
+    private void makeGame(int numButtons, int degree) {
+        mGraph = new Graph(numButtons, degree);
+        Set<Node> nodesSet = mGraph.getNodes();
+        Node[] nodesArray = nodesSet.toArray(new Node[nodesSet.size()]);
+        for (int i = 0; i < numButtons; i++) {
+            final SwitchCompat sc = generateSwitchCompat();
+            final MagicButton mb = new MagicButton(sc, nodesArray[i]);
+            mMagicButtons.add(mb);
+        }
+    }
+
+    /**
+     * This method checks if all switch compats are off.
+     * @return Whether the game is completed.
+     */
+    private boolean isGameFinished() {
+        boolean isFinished = true;
+        for (MagicButton mb : mMagicButtons) {
+            if (mb.getSwitchCompat().isChecked()) {
+                isFinished = false;
+            }
+        }
+        return isFinished;
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -119,8 +160,23 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        if (id == R.id.action_restart) {
+            finish();
+            startActivity(getIntent());
+        }
+        if (id == R.id.action_add_button) {
+            finish();
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.putExtra("numNodes", getIntent().getIntExtra("numNodes", 4) + 1);
+            intent.putExtra("degreeNum", getIntent().getIntExtra("degreeNum", 1));
+            startActivity(intent);
+        }
+        if (id == R.id.action_add_link) {
+            finish();
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.putExtra("numNodes", getIntent().getIntExtra("numNodes", 4));
+            intent.putExtra("degreeNum", getIntent().getIntExtra("degreeNum", 1) + 1);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);

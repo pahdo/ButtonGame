@@ -1,8 +1,5 @@
 package com.danielzou.buttongame;
 
-import android.content.Context;
-import android.support.design.widget.FloatingActionButton;
-
 /**
  * Represents a node in the button graph. Nodes will be paired with floating action buttons in a
  * magic button.

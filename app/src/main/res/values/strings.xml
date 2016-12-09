@@ -4,4 +4,6 @@
     <string name="add_button">Add button</string>
     <string name="add_link">Add additional link per button</string>
     <string name="welcome_message">Try to make all the emojis happy!</string>
+    <string name="remove_button">Remove a button</string>
+    <string name="remove_link">Reduce links per button</string>
 </resources>

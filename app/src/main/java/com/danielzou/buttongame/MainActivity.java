@@ -178,6 +178,20 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("degreeNum", getIntent().getIntExtra("degreeNum", 1) + 1);
             startActivity(intent);
         }
+        if (id == R.id.action_remove_button) {
+            finish();
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.putExtra("numNodes", getIntent().getIntExtra("numNodes", 4) - 1);
+            intent.putExtra("degreeNum", getIntent().getIntExtra("degreeNum", 1));
+            startActivity(intent);
+        }
+        if (id == R.id.action_remove_link) {
+            finish();
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.putExtra("numNodes", getIntent().getIntExtra("numNodes", 4));
+            intent.putExtra("degreeNum", getIntent().getIntExtra("degreeNum", 1) - 1);
+            startActivity(intent);
+        }
 
         return super.onOptionsItemSelected(item);
     }

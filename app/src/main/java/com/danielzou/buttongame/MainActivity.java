@@ -1,21 +1,23 @@
 package com.danielzou.buttongame;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
-import android.widget.ToggleButton;
+import android.widget.GridLayout;
+import android.widget.LinearLayout;
+import android.widget.Switch;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -28,6 +30,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        GridLayout gl = (GridLayout) findViewById(R.id.grid_layout);
+        SwitchCompat mySwitchCompat = new SwitchCompat(this);
+        mySwitchCompat.setId(View.generateViewId());
+        mySwitchCompat.setWidth(dpsToPixels(47));
+        mySwitchCompat.setHeight(dpsToPixels(47));
+        Drawable bg = getDrawable(R.drawable.magic_toggle_button);
+        mySwitchCompat.setBackground(bg);
+        mySwitchCompat.setElevation(dpsToPixels(2));
+        GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
+        lp.setGravity(Gravity.CENTER);
+
+        lp.setMargins(dpsToPixels(8), dpsToPixels(8), dpsToPixels(8), dpsToPixels(8));
+        gl.addView(mySwitchCompat, lp);
 
         final SwitchCompat sc1 = (SwitchCompat) findViewById(R.id.button1);
         final SwitchCompat sc2 = (SwitchCompat) findViewById(R.id.button2);
@@ -77,6 +93,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return null;
+    }
+
+    /**
+     * Converts a dp value to a pixel value.
+     * @return Corresponding pixel value.
+     */
+    public int dpsToPixels(int dps) {
+        final float scale = getResources().getDisplayMetrics().density;
+        return (int) (dps * scale + 0.5f);
     }
 
     @Override
